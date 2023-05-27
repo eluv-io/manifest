@@ -1,4 +1,4 @@
-module eluv-io/manifest
+module github.com/eluv-io/manifest
 
 go 1.19
 
