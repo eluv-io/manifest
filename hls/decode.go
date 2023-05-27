@@ -14,7 +14,7 @@ type masterPlaylistParseState struct {
 	variant          *Variant
 }
 
-//Parse reads a Master Playlist file and converts it to a MasterPlaylist object
+// Parse reads a Master Playlist file and converts it to a MasterPlaylist object
 func (p *MasterPlaylist) Parse(reader io.Reader) error {
 	buf := manifest.NewBufWrapper()
 
@@ -130,7 +130,7 @@ type mediaPlaylistParseState struct {
 	segmentSequence int
 }
 
-//Parse reads a Media Playlist file and convert it to MediaPlaylist object
+// Parse reads a Media Playlist file and convert it to MediaPlaylist object
 func (p *MediaPlaylist) Parse(reader io.Reader) error {
 	buf := manifest.NewBufWrapper()
 
@@ -143,6 +143,8 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 	segment := &Segment{
 		mediaPlaylist: p,
 	}
+
+	cc := 0 // Initial discontinuity sequence
 
 	//Until EOF, read every line and decode into an object
 	var line string
@@ -177,6 +179,9 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 			s.segmentSequence = p.MediaSequence
 		case line[0:index] == "#EXT-X-DISCONTINUITY-SEQUENCE":
 			p.DiscontinuitySequence, buf.Err = strconv.Atoi(line[index+1 : size])
+			if buf.Err == nil {
+				cc = p.DiscontinuitySequence
+			}
 		case line == "#EXT-X-I-FRAMES-ONLY":
 			p.IFramesOnly = true
 		case line[0:index] == "#EXT-X-ALLOW-CACHE":
@@ -193,6 +198,9 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 			p.EndList = true
 		case line[0:index] == "#EXT-X-START":
 			p.StartPoint, buf.Err = decodeStartPoint(line[index+1 : size])
+
+		case line[0:index] == "#EXT-X-DISCONTINUITY":
+			cc++ // Effective discontinuity sequence for following segments
 
 		// Cases below this point refers to tags that effect segments, when we reach a line with no leading #, we've reached the end of a segment definition.
 		case line[0:index] == "#EXT-X-KEY":
@@ -215,6 +223,7 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 		case !strings.HasPrefix(line, "#"):
 			segment.URI = line
 			segment.ID = s.segmentSequence
+			segment.DiscontinuitySequence = cc
 
 			// a previous EXT-X-KEY applies to this segment
 			if len(segment.Keys) == 0 && s.previousKey != nil && s.previousKey.URI != "" {

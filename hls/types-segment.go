@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//Segment represents the Media Segment and its tags
+// Segment represents the Media Segment and its tags
 type Segment struct {
 	ID              int //Sequence number
 	URI             string
@@ -18,7 +18,8 @@ type Segment struct {
 	ProgramDateTime time.Time //Represents tag #EXT-X-PROGRAM-DATE-TIME
 	DateRange       *DateRange
 
-	mediaPlaylist *MediaPlaylist // MediaPlaylist is included to be used internally for resolving relative resource locations
+	DiscontinuitySequence int            // Effective discontinuity sequence for this segment considering all discontinuity tags in this playlist
+	mediaPlaylist         *MediaPlaylist // MediaPlaylist is included to be used internally for resolving relative resource locations
 }
 
 // Request creates a new http request ready to send to retrieve the segment
@@ -54,7 +55,8 @@ func (s Segments) Less(i, j int) bool {
 }
 
 // Inf represents tag
-// 		#EXTINF: <duration>,[<title>]
+//
+//	#EXTINF: <duration>,[<title>]
 type Inf struct {
 	Duration float64
 	Title    string
@@ -156,7 +158,7 @@ func (k *Key) Equal(other *Key) bool {
 	return k == other
 }
 
-//Map represents tag #EXT-X-MAP:<attribute=value>. Specifies how to get the Media Initialization Section
+// Map represents tag #EXT-X-MAP:<attribute=value>. Specifies how to get the Media Initialization Section
 type Map struct {
 	URI       string     //Required.
 	Byterange *Byterange //Optional. Indicates the byte range into the URI resource containing the Media Initialization Section.
@@ -193,10 +195,10 @@ func (m *Map) AbsoluteURL() (string, error) {
 	return resolveURLReference(m.mediaPlaylist.URI, m.URI)
 }
 
-//DateRange represents tag #EXT-X-DATERANGE:<attribute=value>.
+// DateRange represents tag #EXT-X-DATERANGE:<attribute=value>.
 //
-//If present, playlist MUST also contain at least one EXT-X-PROGRAM-DATE-TIME tag.
-//Tags with the same Class MUST NOT indicate ranges that overlap.
+// If present, playlist MUST also contain at least one EXT-X-PROGRAM-DATE-TIME tag.
+// Tags with the same Class MUST NOT indicate ranges that overlap.
 type DateRange struct {
 	ID               string    //Required. If more than one tag with same ID exists, att values MUST be the same.
 	Class            string    //Optional. Specifies some set of attributes and their associated value semantics.
@@ -209,7 +211,7 @@ type DateRange struct {
 	SCTE35           *SCTE35
 }
 
-//SCTE35 represents a DateRange attribute SCTE35-OUT, SCTE35-IN or SCTE35-CMD
+// SCTE35 represents a DateRange attribute SCTE35-OUT, SCTE35-IN or SCTE35-CMD
 type SCTE35 struct {
 	Type  string //Possible Values: IN, OUT, CMD
 	Value string //big-endian binary representation of the splice_info_section(), expressed as a hexadecimal-sequence.
