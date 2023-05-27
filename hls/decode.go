@@ -200,7 +200,7 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 		case line[0:index] == "#EXT-X-START":
 			p.StartPoint, buf.Err = decodeStartPoint(line[index+1 : size])
 
-		case line[0:index] == "#EXT-X-DISCONTINUITY":
+		case line == "#EXT-X-DISCONTINUITY":
 			discontinuityTag = true
 			cc++ // Effective discontinuity sequence for following segments
 

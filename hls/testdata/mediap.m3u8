@@ -31,3 +31,10 @@ https://play-dev.ingest.io/v_6500k4.ts
 #EXTINF:9.009,
 #EXT-X-BYTERANGE:999624@376
 https://play-dev.ingest.io/v_6500k5.ts
+#EXT-X-DISCONTINUITY
+#EXT-X-MAP:URI="mapuri2.for.test",BYTERANGE=6500@30
+#EXT-X-KEY:METHOD=AES-128,URI="https://play-dev.ingest.io/key/fc454946-2000-4952-989f-0f94b44cf987{{q}}",IV=0xecb68f58b786ae63bddfd2f3970282a6
+#EXTINF:9.009,
+../../p2_001.ts
+#EXTINF:9.009,
+../../p2_002.ts

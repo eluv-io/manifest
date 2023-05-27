@@ -2,6 +2,8 @@ package hls
 
 import (
 	"bufio"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -155,8 +157,8 @@ func TestReadMediaPlaylistFile(t *testing.T) {
 		t.Errorf("Expected StartPoint to be 8.345, but got %v", p.StartPoint.TimeOffset)
 	}
 	if p.Segments != nil {
-		if len(p.Segments) != 6 {
-			t.Errorf("Expected len Segments 6, but got %d", len(p.Segments))
+		if len(p.Segments) != 8 {
+			t.Errorf("Expected len Segments 8, but got %d", len(p.Segments))
 		}
 		sd, _ := time.Parse(time.RFC3339Nano, "2010-02-19T14:54:23.031+08:00")
 		dr := &DateRange{ID: "6FFF00", StartDate: sd, SCTE35: &SCTE35{Type: "OUT", Value: "0xFC002F0000000000FF0"}}
@@ -172,6 +174,15 @@ func TestReadMediaPlaylistFile(t *testing.T) {
 		}
 	}
 
+	rd, err := p.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	buf, err := io.ReadAll(rd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(string(buf))
 }
 
 func TestReadMediaPlaylist(t *testing.T) {
