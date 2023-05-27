@@ -145,6 +145,7 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 	}
 
 	cc := 0 // Initial discontinuity sequence
+	discontinuityTag := false
 
 	//Until EOF, read every line and decode into an object
 	var line string
@@ -200,6 +201,7 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 			p.StartPoint, buf.Err = decodeStartPoint(line[index+1 : size])
 
 		case line[0:index] == "#EXT-X-DISCONTINUITY":
+			discontinuityTag = true
 			cc++ // Effective discontinuity sequence for following segments
 
 		// Cases below this point refers to tags that effect segments, when we reach a line with no leading #, we've reached the end of a segment definition.
@@ -224,6 +226,7 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 			segment.URI = line
 			segment.ID = s.segmentSequence
 			segment.DiscontinuitySequence = cc
+			segment.Discontinuity = discontinuityTag
 
 			// a previous EXT-X-KEY applies to this segment
 			if len(segment.Keys) == 0 && s.previousKey != nil && s.previousKey.URI != "" {
@@ -240,6 +243,7 @@ func (p *MediaPlaylist) Parse(reader io.Reader) error {
 			// Reset segment
 			segment = &Segment{mediaPlaylist: p}
 			s.segmentSequence++
+			discontinuityTag = false
 		}
 	}
 
